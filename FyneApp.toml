@@ -1,0 +1,9 @@
+[Details]
+Icon = "Icon.png"
+Name = "Fong"
+ID = "com.fyshos.fong"
+Version = "0.0.1"
+Build = 1
+
+[LinuxAndBSD]
+Categories = ["Game"]
