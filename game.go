@@ -31,6 +31,11 @@ type game struct {
 	board1  *scoreboard
 	board2  *scoreboard
 
+	// pause overlay: a dim wash and the "PAUSED" caption
+	dim       *canvas.Rectangle
+	pauseText *canvas.Text
+	paused    bool
+
 	// foreground colour for the greyscale pieces
 	fg color.Color
 
@@ -78,6 +83,15 @@ func newGame() *game {
 	}
 	objs = append(objs, g.paddle1, g.paddle2, g.ball, g.board1.cont, g.board2.cont)
 
+	// pause overlay sits on top of everything and stays hidden until paused
+	g.dim = canvas.NewRectangle(color.NRGBA{A: 0xb0})
+	g.dim.Hide()
+	g.pauseText = canvas.NewText("PAUSED", fgCol)
+	g.pauseText.TextSize = 48
+	g.pauseText.TextStyle = fyne.TextStyle{Bold: true}
+	g.pauseText.Hide()
+	objs = append(objs, g.dim, g.pauseText)
+
 	g.field = container.NewWithoutLayout(objs...)
 	return g
 }
@@ -101,6 +115,25 @@ func (g *game) setKey(name fyne.KeyName, down bool) {
 		g.up2 = down
 	case fyne.KeyDown:
 		g.down2 = down
+	case fyne.KeySpace:
+		if down {
+			g.setPaused(!g.paused)
+		}
+	}
+}
+
+// setPaused freezes or resumes play and toggles the overlay to match.
+func (g *game) setPaused(p bool) {
+	if g.paused == p {
+		return
+	}
+	g.paused = p
+	if p {
+		g.dim.Show()
+		g.pauseText.Show()
+	} else {
+		g.dim.Hide()
+		g.pauseText.Hide()
 	}
 }
 
@@ -140,6 +173,12 @@ func (g *game) step() {
 		g.p1y = top + (playH-paddleHeight)/2
 		g.p2y = g.p1y
 		g.resetBall(w, h)
+	}
+
+	// while paused nothing moves, but keep things laid out for resizes
+	if g.paused {
+		g.layout(w, h, top)
+		return
 	}
 
 	// move paddles
@@ -251,6 +290,11 @@ func (g *game) layout(w, h, top float32) {
 	g.board1.cont.Move(fyne.NewPos(w/2-w/4-s1.Width/2, (top-s1.Height)/2))
 	s2 := g.board2.size(g.score2)
 	g.board2.cont.Move(fyne.NewPos(w/2+w/4-s2.Width/2, (top-s2.Height)/2))
+
+	g.dim.Resize(fyne.NewSize(w, h))
+	g.dim.Move(fyne.NewPos(0, 0))
+	ts := g.pauseText.MinSize()
+	g.pauseText.Move(fyne.NewPos((w-ts.Width)/2, (h-ts.Height)/2))
 }
 
 func clamp(v, lo, hi float32) float32 {

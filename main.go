@@ -17,6 +17,12 @@ func main() {
 	w.Resize(fyne.NewSize(800, 500))
 
 	g.connectInput(w)
+
+	// pause automatically when the app is sent to the background
+	a.Lifecycle().SetOnExitedForeground(func() {
+		fyne.Do(func() { g.setPaused(true) })
+	})
+
 	g.start()
 
 	w.ShowAndRun()
