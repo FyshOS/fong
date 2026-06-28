@@ -11,7 +11,24 @@ import (
 
 const audioRate beep.SampleRate = 44100
 
-var audioReady bool
+// prefMuted is the preferences key holding the saved mute state.
+const prefMuted = "sound.muted"
+
+var (
+	audioReady bool
+	muted      bool
+)
+
+// loadMute restores the saved mute state from preferences.
+func loadMute() {
+	muted = fyne.CurrentApp().Preferences().Bool(prefMuted)
+}
+
+// setMute updates the mute state and remembers it for next launch.
+func setMute(m bool) {
+	muted = m
+	fyne.CurrentApp().Preferences().SetBool(prefMuted, m)
+}
 
 // initAudio sets up the speaker once. If it fails the game runs silently.
 func initAudio() {
@@ -54,7 +71,7 @@ func (t *tone) Stream(samples [][2]float64) (n int, ok bool) {
 func (t *tone) Err() error { return nil }
 
 func playTone(freq float64, d time.Duration) {
-	if !audioReady {
+	if !audioReady || muted {
 		return
 	}
 	speaker.Play(&tone{freq: freq, amp: 0.2, remaining: audioRate.N(d)})

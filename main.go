@@ -8,6 +8,7 @@ import (
 func main() {
 	a := app.New()
 	initAudio()
+	loadMute()
 
 	w := a.NewWindow("Fong")
 	w.SetPadded(false)

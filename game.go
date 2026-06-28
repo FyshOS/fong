@@ -36,6 +36,9 @@ type game struct {
 	pauseText *canvas.Text
 	paused    bool
 
+	// muteIcon is a small corner glyph shown while sound is muted
+	muteIcon *canvas.Image
+
 	// foreground colour for the greyscale pieces
 	fg color.Color
 
@@ -90,9 +93,15 @@ func newGame() *game {
 	g.pauseText.TextSize = 48
 	g.pauseText.TextStyle = fyne.TextStyle{Bold: true}
 	g.pauseText.Hide()
-	objs = append(objs, g.dim, g.pauseText)
+
+	// muted glyph tucks into a corner; visible only while muted
+	g.muteIcon = canvas.NewImageFromResource(theme.VolumeMuteIcon())
+	g.muteIcon.FillMode = canvas.ImageFillContain
+	g.muteIcon.SetMinSize(fyne.NewSize(24, 24))
+	objs = append(objs, g.dim, g.pauseText, g.muteIcon)
 
 	g.field = container.NewWithoutLayout(objs...)
+	g.applyMute(muted)
 	return g
 }
 
@@ -119,6 +128,20 @@ func (g *game) setKey(name fyne.KeyName, down bool) {
 		if down {
 			g.setPaused(!g.paused)
 		}
+	case fyne.KeyM:
+		if down {
+			g.applyMute(!muted)
+		}
+	}
+}
+
+// applyMute toggles sound, persists the choice, and updates the caption.
+func (g *game) applyMute(m bool) {
+	setMute(m)
+	if m {
+		g.muteIcon.Show()
+	} else {
+		g.muteIcon.Hide()
 	}
 }
 
@@ -295,6 +318,10 @@ func (g *game) layout(w, h, top float32) {
 	g.dim.Move(fyne.NewPos(0, 0))
 	ts := g.pauseText.MinSize()
 	g.pauseText.Move(fyne.NewPos((w-ts.Width)/2, (h-ts.Height)/2))
+
+	ms := g.muteIcon.MinSize()
+	g.muteIcon.Resize(ms)
+	g.muteIcon.Move(fyne.NewPos(w-ms.Width-12, h-ms.Height-12))
 }
 
 func clamp(v, lo, hi float32) float32 {

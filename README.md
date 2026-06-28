@@ -13,6 +13,9 @@ tribute to the original.
 | Left   | W  | S    |
 | Right  | ↑  | ↓    |
 
+Press **Space** to pause and **M** to mute or unmute the sound — the mute state
+is remembered between runs.
+
 The ball serves automatically after a short pause. Each paddle hit adds a little
 spin and nudges the pace up.
 
